@@ -3,4 +3,4 @@
 **/venv/
 **/.vscode/
 log.txt
-paper.db
+*.db

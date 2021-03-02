@@ -1,6 +1,6 @@
 from playhouse.sqlite_ext import *
 
-db = SqliteExtDatabase('paper.db')
+db = SqliteExtDatabase('paper_new.db')
 
 class BaseModel(Model):
     class Meta:

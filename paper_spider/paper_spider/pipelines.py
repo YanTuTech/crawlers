@@ -52,10 +52,10 @@ class PaperSpiderPipeline:
             logger.info(f'BaseCat {item["cas_base"][0]} existed.')
         journal.cas_base = cas_base
 
-        cas_new_query = CASBaseCategory.select().where(CASBaseCategory.name==item['cas_new'][0])
+        cas_new_query = CASNewCategory.select().where(CASNewCategory.name==item['cas_new'][0])
         cas_new = None
         if not cas_new_query.exists():
-            cas_new = CASBaseCategory.create(name=item['cas_new'][0], code=item['cas_new'][1])
+            cas_new = CASNewCategory.create(name=item['cas_new'][0], code=item['cas_new'][1])
             logger.info(f'NewCat {item["cas_new"][0]} created.')
         else:
             cas_new =cas_new_query.first()

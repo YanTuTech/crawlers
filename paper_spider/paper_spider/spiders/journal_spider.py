@@ -3,6 +3,7 @@ import json
 from bs4 import BeautifulSoup
 from paper_spider.items import *
 from utils import *
+from db import Journal
 from scrapy.http.request.form import FormRequest
 
 class JournalsSpider(scrapy.Spider):
@@ -11,14 +12,12 @@ class JournalsSpider(scrapy.Spider):
     def start_requests(self):
         journal_gen = get_journals()
         
-        # start = 10
         count = 0
         for journal_name, impact_factor in journal_gen:
-            # if count < start:
-            #     count += 1
-            #     continue
-            # if count > 10:
-            #     break
+            if Journal.select().where(Journal.name==journal_name).exists():
+                self.logger.info(f'Journal exsited: {journal_name}')
+                count += 1
+                continue
             self.logger.info(f'Current count: {count}')
             url = 'http://www.letpub.com.cn/index.php?page=journalapp&view=search'
             data = {
