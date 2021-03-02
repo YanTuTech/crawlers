@@ -2,12 +2,14 @@
 #
 # See documentation in:
 # https://docs.scrapy.org/en/latest/topics/spider-middleware.html
-
+import scrapy
 from scrapy import signals
 
 # useful for handling different item types with a single interface
 from itemadapter import is_item, ItemAdapter
-
+from paper_spider.items import *
+import logging
+logger = logging.getLogger(__name__)
 
 class PaperSpiderSpiderMiddleware:
     # Not all methods need to be defined. If a method is not defined,
@@ -34,7 +36,14 @@ class PaperSpiderSpiderMiddleware:
 
         # Must return an iterable of Request, or item objects.
         for i in result:
-            yield i
+            if type(i) is DetailUrl:
+                name = i['name']
+                href = 'http://www.letpub.com.cn' + i['href'][1:]
+                impact_factor = i['impact_factor']
+                # logger.info(f'{name},{href},{impact_factor}')
+                yield scrapy.Request(href, callback=spider.parse_detail, meta={'if': impact_factor, 'name': name})
+            elif type(i) is Journal:
+                yield i
 
     def process_spider_exception(self, response, exception, spider):
         # Called when a spider or process_spider_input() method

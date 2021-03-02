@@ -6,8 +6,11 @@
 
 # useful for handling different item types with a single interface
 from itemadapter import ItemAdapter
-
+from paper_spider.items import *
 
 class PaperSpiderPipeline:
     def process_item(self, item, spider):
+        if type(item) is not Journal:
+            return item
+        # store journal
         return item
