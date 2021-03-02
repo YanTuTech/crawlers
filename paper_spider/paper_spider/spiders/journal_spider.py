@@ -13,9 +13,16 @@ class JournalsSpider(scrapy.Spider):
         journal_gen = get_journals()
         
         count = 0
+        start = False
+        last_name = ''
+        try:
+            last_name = JournalDB.select().order_by(JournalDB.id.desc()).get().name
+        except:
+            start = True
         for journal_name, impact_factor in journal_gen:
-            if JournalDB.select().where(JournalDB.name==journal_name).exists():
-                self.logger.info(f'Journal exsited: {journal_name}')
+            if not start and journal_name == last_name:
+                start = True
+            if not start:
                 count += 1
                 continue
             self.logger.info(f'Current count: {count}')

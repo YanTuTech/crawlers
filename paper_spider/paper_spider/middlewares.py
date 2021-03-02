@@ -8,6 +8,8 @@ from scrapy import signals
 # useful for handling different item types with a single interface
 from itemadapter import is_item, ItemAdapter
 from paper_spider.items import *
+from scrapy.http.request.form import FormRequest
+
 import logging
 logger = logging.getLogger(__name__)
 
@@ -50,14 +52,28 @@ class PaperSpiderSpiderMiddleware:
         # (from other spider middleware) raises an exception.
 
         # Should return either None or an iterable of Request or item objects.
+        return
         depth = response.request.meta.get('depth', 0)
-        if depth < 5:
+        if depth < 1:
             logger.info('Try again...')
         else:
+            logger.warning(f'Failed to parse search result of {response.request.meta["name"]}...')
             return
+        
         meta = response.request.meta
+        name = meta['name']
+        impact_factor = meta['if']
+        url = 'http://www.letpub.com.cn/index.php?page=journalapp&view=search'
+        data = {
+            'searchname': name
+        }
+        depth += 1
         meta['depth'] = depth + 1
-        yield scrapy.Request(response.request.url, callback=spider.parse_detail, meta=meta, dont_filter=True)
+
+        if response.request.url == url:
+            yield FormRequest(url, callback=spider.parse, formdata=data, meta={'if': impact_factor, 'name': name, 'depth': depth})
+        else:
+            yield scrapy.Request(response.request.url, callback=spider.parse_detail, meta=meta, dont_filter=True)
 
     def process_start_requests(self, start_requests, spider):
         # Called with the start requests of the spider, and works
