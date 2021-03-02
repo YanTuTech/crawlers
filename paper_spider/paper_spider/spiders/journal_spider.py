@@ -3,7 +3,7 @@ import json
 from bs4 import BeautifulSoup
 from paper_spider.items import *
 from utils import *
-from db import Journal
+from db import Journal as JournalDB
 from scrapy.http.request.form import FormRequest
 
 class JournalsSpider(scrapy.Spider):
@@ -14,7 +14,7 @@ class JournalsSpider(scrapy.Spider):
         
         count = 0
         for journal_name, impact_factor in journal_gen:
-            if Journal.select().where(Journal.name==journal_name).exists():
+            if JournalDB.select().where(JournalDB.name==journal_name).exists():
                 self.logger.info(f'Journal exsited: {journal_name}')
                 count += 1
                 continue
@@ -23,18 +23,26 @@ class JournalsSpider(scrapy.Spider):
             data = {
                 'searchname': journal_name
             }
-            yield FormRequest(url, callback=self.parse, formdata=data, meta={'if': impact_factor, 'name': journal_name})
+            yield FormRequest(url, callback=self.parse, formdata=data, meta={'if': impact_factor, 'name': journal_name, 'depth': 0})
             count += 1
 
     def parse(self, response):
         name = response.request.meta['name']
+        depth = response.request.meta['depth']
         impact_factor = response.request.meta['if']
         soup =  BeautifulSoup(response.text, 'html.parser')
         table = soup.find('table',{"class":"table_yjfx"})
         if table is None:
             self.logger.warning(f'[ERR:0] Failed to retrieve journal: {name}.')
-            # yield FormRequest(response.url, callback=self.parse, formdata=data, meta={'if': impact_factor, 'name': journal_name})
-            # yield scrapy.Request(response.url, callback=self.parse, dont_filter=True)
+            if depth > 5:
+                return
+            self.logger.info(f'Try again to retrieve journal: {name}...')
+            url = 'http://www.letpub.com.cn/index.php?page=journalapp&view=search'
+            data = {
+                'searchname': name
+            }
+            depth += 1
+            yield FormRequest(url, callback=self.parse, formdata=data, meta={'if': impact_factor, 'name': name, 'depth': depth})
             return
         trs = list(table.find_all('tr'))
         if len(trs) < 4:
