@@ -111,13 +111,13 @@ class Journal(BaseModel):
     abrv_name = CharField()
     impact_factor = FloatField()
     ssin = CharField(unique=True)
-    e_ssin = CharField(unique=True)
+    e_ssin = CharField()
     self_citation_ratio = FloatField() # 2019-2020
-    jcr_cat = ForeignKeyField(JCRCategory)
-    cas_base = ForeignKeyField(CASBaseCategory)
+    jcr_cat = ForeignKeyField(JCRCategory, null=True)
+    cas_base = ForeignKeyField(CASBaseCategory, null=True)
     cas_base_top = BooleanField()
     cas_base_review = BooleanField()
-    cas_new = ForeignKeyField(CASNewCategory)
+    cas_new = ForeignKeyField(CASNewCategory, null=True)
     cas_new_top = BooleanField()
     cas_new_review = BooleanField()
 

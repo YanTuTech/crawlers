@@ -50,9 +50,11 @@ SPIDER_MIDDLEWARES = {
 
 # Enable or disable downloader middlewares
 # See https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
-#DOWNLOADER_MIDDLEWARES = {
-#    'paper_spider.middlewares.PaperSpiderDownloaderMiddleware': 543,
-#}
+DOWNLOADER_MIDDLEWARES = {
+   # 'paper_spider.middlewares.PaperSpiderDownloaderMiddleware': 543,
+   'rotating_proxies.middlewares.RotatingProxyMiddleware': 610,
+   'rotating_proxies.middlewares.BanDetectionMiddleware': 620,
+}
 
 # Enable or disable extensions
 # See https://docs.scrapy.org/en/latest/topics/extensions.html
@@ -62,9 +64,9 @@ SPIDER_MIDDLEWARES = {
 
 # Configure item pipelines
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
-#ITEM_PIPELINES = {
-#    'paper_spider.pipelines.PaperSpiderPipeline': 300,
-#}
+ITEM_PIPELINES = {
+   'paper_spider.pipelines.PaperSpiderPipeline': 300,
+}
 
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See https://docs.scrapy.org/en/latest/topics/autothrottle.html
@@ -87,5 +89,6 @@ SPIDER_MIDDLEWARES = {
 #HTTPCACHE_IGNORE_HTTP_CODES = []
 #HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
 
-# LOG_LEVEL = 'INFO'
-# LOG_FILE = 'log.txt'
+LOG_LEVEL = 'INFO'
+LOG_FILE = 'log.txt'
+ROTATING_PROXY_LIST_PATH = 'proxies.txt'

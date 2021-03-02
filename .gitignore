@@ -2,3 +2,5 @@
 **/*.pyc
 **/venv/
 **/.vscode/
+log.txt
+paper.db

@@ -11,10 +11,15 @@ class JournalsSpider(scrapy.Spider):
     def start_requests(self):
         journal_gen = get_journals()
         
+        # start = 10
         count = 0
         for journal_name, impact_factor in journal_gen:
-            if count > 3:
-                break
+            # if count < start:
+            #     count += 1
+            #     continue
+            # if count > 10:
+            #     break
+            self.logger.info(f'Current count: {count}')
             url = 'http://www.letpub.com.cn/index.php?page=journalapp&view=search'
             data = {
                 'searchname': journal_name
@@ -29,6 +34,8 @@ class JournalsSpider(scrapy.Spider):
         table = soup.find('table',{"class":"table_yjfx"})
         if table is None:
             self.logger.warning(f'[ERR:0] Failed to retrieve journal: {name}.')
+            # yield FormRequest(response.url, callback=self.parse, formdata=data, meta={'if': impact_factor, 'name': journal_name})
+            # yield scrapy.Request(response.url, callback=self.parse, dont_filter=True)
             return
         trs = list(table.find_all('tr'))
         if len(trs) < 4:
@@ -46,6 +53,7 @@ class JournalsSpider(scrapy.Spider):
         anchor = soup.find('div', {'class': 'layui-row'})
         for _ in range(4):
             anchor = anchor.next_sibling
+
         table = anchor
         trs = list(table.find('tbody').children)
         idx = 2
@@ -97,6 +105,7 @@ class JournalsSpider(scrapy.Spider):
             sub = tds[0].contents[-1]
             sub_code = tds[1].find('span', style=lambda value: value and 'display:none' not in value).text
             cas_base_sub.append([sub, sub_en, sub_code])
+
         cas_base_top = cas_base_tds[2].text
         cas_base_review = cas_base_tds[3].text
         # self.logger.info([cas_base_cat, cas_base_cat_code])
@@ -113,6 +122,7 @@ class JournalsSpider(scrapy.Spider):
             sub = tds[0].contents[-1]
             sub_code = tds[1].find('span', style=lambda value: value and 'display:none' not in value).text
             cas_new_sub.append([sub, sub_en, sub_code])
+
         cas_new_top = cas_new_tds[2].text
         cas_new_review = cas_new_tds[3].text
         # self.logger.info([cas_new_cat, cas_new_cat_code])
