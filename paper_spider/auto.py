@@ -7,7 +7,7 @@ try:
     os.remove('log.txt')
 except:
     pass
-# refresh_proxies()
+refresh_proxies()
 time.sleep(5)
 get_proxies()
 start = time.time()

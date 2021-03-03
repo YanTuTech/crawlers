@@ -25,6 +25,11 @@ class JournalsSpider(scrapy.Spider):
             if not start:
                 count += 1
                 continue
+
+            # if JournalDB.select().where(JournalDB.name==journal_name).exists():
+            #     self.logger.info(f'Skip {journal_name}.')
+            #     count += 1
+            #     continue
             self.logger.info(f'Current count: {count}')
             url = 'http://www.letpub.com.cn/index.php?page=journalapp&view=search'
             data = {
