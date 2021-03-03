@@ -19,15 +19,19 @@ try:
         poll = spider.poll()
         if poll is not None:
             break
-        if time.time() - start > 60 * 60:
-            spider.terminate()
-            spider.wait()
+        if time.time() - start < 60 * 60:
+            time.sleep(5)
+            continue
+        spider.terminate()
+        spider.wait()
 
-            os.remove('log.txt')
-            get_proxies()
-            spider = subprocess.Popen(['scrapy', 'crawl', 'journals'])
-            start = time.time()
+        os.remove('log.txt')
+        refresh_proxies()
         time.sleep(5)
+        get_proxies()
+        spider = subprocess.Popen(['scrapy', 'crawl', 'journals'])
+        start = time.time()
+        
 except:
     spider.terminate()
     

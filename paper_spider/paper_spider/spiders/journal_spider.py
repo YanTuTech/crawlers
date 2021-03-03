@@ -63,6 +63,7 @@ class JournalsSpider(scrapy.Spider):
         tr = trs[2]
         href = list(tr.find_all('td'))[1].find('a')['href']
         yield DetailUrl(name=name, impact_factor=impact_factor, href=href)
+        # self.logger.info(f"User-Agent: {response.request.headers['User-Agent']}")
         self.logger.info(f'Succeed to parse detail url of {name}: {href}.')
 
     def parse_detail(self, response):
@@ -168,6 +169,6 @@ class JournalsSpider(scrapy.Spider):
         )
         yield item
 
-        # self.logger.info(f'{full_name}, {abrv_name}, {ssin}, {e_ssin}, {self_cite_ratio}')
+        # self.logger.info(f"User-Agent: {response.request.headers['User-Agent']}")
         self.logger.info(f'Succeed in parse_detail for {full_name}.')
 

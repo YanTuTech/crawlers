@@ -52,6 +52,10 @@ SPIDER_MIDDLEWARES = {
 # See https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
 DOWNLOADER_MIDDLEWARES = {
    # 'paper_spider.middlewares.PaperSpiderDownloaderMiddleware': 543,
+   'scrapy.downloadermiddlewares.useragent.UserAgentMiddleware': None,
+   'scrapy.downloadermiddlewares.retry.RetryMiddleware': None,
+   'scrapy_fake_useragent.middleware.RandomUserAgentMiddleware': 400,
+   'scrapy_fake_useragent.middleware.RetryUserAgentMiddleware': 401,
    'rotating_proxies.middlewares.RotatingProxyMiddleware': 610,
    'rotating_proxies.middlewares.BanDetectionMiddleware': 620,
 }
@@ -88,6 +92,39 @@ ITEM_PIPELINES = {
 #HTTPCACHE_DIR = 'httpcache'
 #HTTPCACHE_IGNORE_HTTP_CODES = []
 #HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
+
+# USER_AGENTS = [
+#     ('Mozilla/5.0 (X11; Linux x86_64) '
+#      'AppleWebKit/537.36 (KHTML, like Gecko) '
+#      'Chrome/57.0.2987.110 '
+#      'Safari/537.36'),  # chrome
+#     ('Mozilla/5.0 (X11; Linux x86_64) '
+#      'AppleWebKit/537.36 (KHTML, like Gecko) '
+#      'Chrome/61.0.3163.79 '
+#      'Safari/537.36'),  # chrome
+#     ('Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:55.0) '
+#      'Gecko/20100101 '
+#      'Firefox/55.0'),  # firefox
+#     ('Mozilla/5.0 (X11; Linux x86_64) '
+#      'AppleWebKit/537.36 (KHTML, like Gecko) '
+#      'Chrome/61.0.3163.91 '
+#      'Safari/537.36'),  # chrome
+#     ('Mozilla/5.0 (X11; Linux x86_64) '
+#      'AppleWebKit/537.36 (KHTML, like Gecko) '
+#      'Chrome/62.0.3202.89 '
+#      'Safari/537.36'),  # chrome
+#     ('Mozilla/5.0 (X11; Linux x86_64) '
+#      'AppleWebKit/537.36 (KHTML, like Gecko) '
+#      'Chrome/63.0.3239.108 '
+#      'Safari/537.36'),  # chrome
+# ]
+
+# FAKEUSERAGENT_PROVIDERS = [
+#     'scrapy_fake_useragent.providers.FakeUserAgentProvider',  # this is the first provider we'll try
+#     'scrapy_fake_useragent.providers.FakerProvider',  # if FakeUserAgentProvider fails, we'll use faker to generate a user-agent string for us
+#     'scrapy_fake_useragent.providers.FixedUserAgentProvider',  # fall back to USER_AGENT value
+# ]
+# USER_AGENT = '<your user agent string which you will fall back to if all other providers fail>'
 
 LOG_LEVEL = 'INFO'
 LOG_FILE = 'log.txt'
