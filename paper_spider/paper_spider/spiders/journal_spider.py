@@ -81,6 +81,10 @@ class JournalsSpider(scrapy.Spider):
         trs = list(table.find('tbody').children)
         idx = 2
         name_tr = trs[idx]
+        name_span = name_tr.find('span')
+        full_name = name_span.find('a').text
+        # if full_name.lower() != name.lower():
+        #     return
         idx += 1
         ssin_tr = trs[idx]
         idx += 1
@@ -108,8 +112,7 @@ class JournalsSpider(scrapy.Spider):
             cas_base_table = None
             cas_new_table = None
 
-        name_span = name_tr.find('span')
-        full_name = name_span.find('a').text
+        
         abrv_name = name_span.find('font').text
         ssin = ssin_tr.find_all('td')[1].text
         e_ssin = ""
@@ -196,7 +199,7 @@ class JournalsSpider(scrapy.Spider):
             cas_new_review=cas_new_review,
         )
         yield item
-        self.logger.debug(f'{full_name} {name}')
+        # self.logger.debug(f'{full_name} {name}')
         # self.logger.debug(f'Yield {item}')
 
         # self.logger.info(f"User-Agent: {response.request.headers['User-Agent']}")
