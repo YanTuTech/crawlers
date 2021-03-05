@@ -39,41 +39,44 @@ class PaperSpiderSpiderMiddleware:
         # Must return an iterable of Request, or item objects.
         for i in result:
             if type(i) is DetailUrl:
+                # logger.debug('Receive DetailUrl')
                 name = i['name']
                 href = 'http://www.letpub.com.cn' + i['href'][1:]
                 impact_factor = i['impact_factor']
                 # logger.info(f'{name},{href},{impact_factor}')
                 yield scrapy.Request(href, callback=spider.parse_detail, meta={'if': impact_factor, 'name': name})
-            elif type(i) is Journal:
+            elif type(i) is JournalItem:
+                # logger.debug('Receive JournalItem')
                 yield i
+            else:
+                logger.debug(f'Unknown item {i}')
 
     def process_spider_exception(self, response, exception, spider):
         # Called when a spider or process_spider_input() method
         # (from other spider middleware) raises an exception.
 
         # Should return either None or an iterable of Request or item objects.
+        logger.warning(f'Failed to parse search result of {response.request.meta["name"]} {response.request.url}...')
         return
+        url = 'http://www.letpub.com.cn/index.php?page=journalapp&view=search'
+        if response.request.url == url:
+            # yield FormRequest(url, callback=spider.parse, formdata=data, meta={'if': impact_factor, 'name': name, 'depth': depth}, dont_filter=True)
+            # logger.warning(f'Failed to parse search result of {response.request.meta["name"]} {response.request.url}...')
+            return
         depth = response.request.meta.get('depth', 0)
         if depth < 1:
-            logger.info('Try again...')
+            logger.info(f'Try again for {response.request.meta["name"]} {response.request.url}...')
         else:
-            logger.warning(f'Failed to parse search result of {response.request.meta["name"]}...')
+            logger.warning(f'Failed to parse search result of {response.request.meta["name"]} {response.request.url}...')
             return
         
         meta = response.request.meta
         name = meta['name']
         impact_factor = meta['if']
-        url = 'http://www.letpub.com.cn/index.php?page=journalapp&view=search'
-        data = {
-            'searchname': name
-        }
         depth += 1
         meta['depth'] = depth + 1
 
-        if response.request.url == url:
-            yield FormRequest(url, callback=spider.parse, formdata=data, meta={'if': impact_factor, 'name': name, 'depth': depth})
-        else:
-            yield scrapy.Request(response.request.url, callback=spider.parse_detail, meta=meta, dont_filter=True)
+        yield scrapy.Request(response.request.url, callback=spider.parse_detail, meta=meta, dont_filter=True)
 
     def process_start_requests(self, start_requests, spider):
         # Called with the start requests of the spider, and works

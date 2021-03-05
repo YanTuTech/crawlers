@@ -6,7 +6,7 @@
 
 # useful for handling different item types with a single interface
 from itemadapter import ItemAdapter
-from paper_spider.items import Journal as JournalItem
+from paper_spider.items import JournalItem
 from db import *
 import logging 
 logger = logging.getLogger(__name__)
@@ -15,10 +15,12 @@ logger = logging.getLogger(__name__)
 class PaperSpiderPipeline:
     def process_item(self, item, spider):
         if type(item) is not JournalItem:
+            # logger.debug(f'Not journalItem.')
             return item
         if Journal.select().where(Journal.name==item['name']).exists():
             logger.info(f'Journal {item["name"]} existed.')
             return item
+        # logger.debug(f'Received journalItem.')
         journal = Journal.create(
             name=item['name'],
             abrv_name=item['abrv_name'],
@@ -32,35 +34,38 @@ class PaperSpiderPipeline:
             cas_new_review=True if item['cas_new_review'] == "是" else False,
         )
 
-        jcr_cat_query = JCRCategory.select().where(JCRCategory.name==item['jcr_cat_code'][0])
-        jcr_cat = None
-        if not jcr_cat_query.exists():
-            jcr_cat = JCRCategory.create(name=item['jcr_cat_code'][0], code=item['jcr_cat_code'][1])
-            # logger.info(f'JCRCat {item["jcr_cat_code"][1]} created.')
-        else:
-            jcr_cat = jcr_cat_query.first()
-            # logger.info(f'JCRCat {item["jcr_cat_code"][1]} existed.')
-        journal.jcr_cat = jcr_cat
+        if item['jcr_cat_code'][0] is not None:
+            jcr_cat_query = JCRCategory.select().where(JCRCategory.name==item['jcr_cat_code'][0])
+            jcr_cat = None
+            if not jcr_cat_query.exists():
+                jcr_cat = JCRCategory.create(name=item['jcr_cat_code'][0], code=item['jcr_cat_code'][1])
+                # logger.info(f'JCRCat {item["jcr_cat_code"][1]} created.')
+            else:
+                jcr_cat = jcr_cat_query.first()
+                # logger.info(f'JCRCat {item["jcr_cat_code"][1]} existed.')
+            journal.jcr_cat = jcr_cat
 
-        cas_base_query = CASBaseCategory.select().where(CASBaseCategory.name==item['cas_base'][0])
-        cas_base = None
-        if not cas_base_query.exists():
-            cas_base = CASBaseCategory.create(name=item['cas_base'][0], code=item['cas_base'][1])
-            # logger.info(f'BaseCat {item["cas_base"][0]} created.')
-        else:
-            cas_base =cas_base_query.first()
-            # logger.info(f'BaseCat {item["cas_base"][0]} existed.')
-        journal.cas_base = cas_base
+        if item['cas_base'][0] is not None:
+            cas_base_query = CASBaseCategory.select().where(CASBaseCategory.name==item['cas_base'][0])
+            cas_base = None
+            if not cas_base_query.exists():
+                cas_base = CASBaseCategory.create(name=item['cas_base'][0], code=item['cas_base'][1])
+                # logger.info(f'BaseCat {item["cas_base"][0]} created.')
+            else:
+                cas_base =cas_base_query.first()
+                # logger.info(f'BaseCat {item["cas_base"][0]} existed.')
+            journal.cas_base = cas_base
 
-        cas_new_query = CASNewCategory.select().where(CASNewCategory.name==item['cas_new'][0])
-        cas_new = None
-        if not cas_new_query.exists():
-            cas_new = CASNewCategory.create(name=item['cas_new'][0], code=item['cas_new'][1])
-            # logger.info(f'NewCat {item["cas_new"][0]} created.')
-        else:
-            cas_new =cas_new_query.first()
-            # logger.info(f'NewCat {item["cas_new"][0]} existed.')
-        journal.cas_new = cas_new
+        if item['cas_new'][0] is not None:
+            cas_new_query = CASNewCategory.select().where(CASNewCategory.name==item['cas_new'][0])
+            cas_new = None
+            if not cas_new_query.exists():
+                cas_new = CASNewCategory.create(name=item['cas_new'][0], code=item['cas_new'][1])
+                # logger.info(f'NewCat {item["cas_new"][0]} created.')
+            else:
+                cas_new =cas_new_query.first()
+                # logger.info(f'NewCat {item["cas_new"][0]} existed.')
+            journal.cas_new = cas_new
 
         for sub in item['jcr_sub']:
             sub_instance = None

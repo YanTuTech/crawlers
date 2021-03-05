@@ -13,27 +13,29 @@ class JournalsSpider(scrapy.Spider):
         journal_gen = get_journals()
         
         count = 0
-        start = False
-        last_name = ''
-        try:
-            last_name = JournalDB.select().order_by(JournalDB.id.desc()).get().name
-        except:
-            start = True
+        journals = JournalDB.select()
+        journals = [journal.name.lower() for journal in journals]
+        # start = False
+        # last_name = ''
+        # try:
+        #     last_name = JournalDB.select().order_by(JournalDB.id.desc()).get().name
+        # except:
+        #     start = True
         for journal_name, impact_factor in journal_gen:
-            if not start and journal_name == last_name:
-                start = True
-            if not start:
-                count += 1
-                continue
-
-            # if JournalDB.select().where(JournalDB.name==journal_name).exists():
-            #     self.logger.info(f'Skip {journal_name}.')
+            # if not start and journal_name == last_name:
+            #     start = True
+            # if not start:
             #     count += 1
             #     continue
+            if journal_name.lower() in journals:
+                count += 1
+                self.logger.info(f'Journal existed {journal_name}')
+                continue
             self.logger.info(f'Current count: {count}')
             url = 'http://www.letpub.com.cn/index.php?page=journalapp&view=search'
             data = {
-                'searchname': journal_name
+                'searchname': journal_name,
+                'searchsort': 'relevance'
             }
             yield FormRequest(url, callback=self.parse, formdata=data, meta={'if': impact_factor, 'name': journal_name, 'depth': 0})
             count += 1
@@ -51,7 +53,8 @@ class JournalsSpider(scrapy.Spider):
             self.logger.info(f'Try again to retrieve journal: {name}...')
             url = 'http://www.letpub.com.cn/index.php?page=journalapp&view=search'
             data = {
-                'searchname': name
+                'searchname': name,
+                'searchsort': 'relevance'
             }
             depth += 1
             yield FormRequest(url, callback=self.parse, formdata=data, meta={'if': impact_factor, 'name': name, 'depth': depth})
@@ -82,17 +85,28 @@ class JournalsSpider(scrapy.Spider):
         ssin_tr = trs[idx]
         idx += 1
         e_ssin_tr = trs[idx]
-        if 'E-ISSN' not in e_ssin_tr.text:
+        if 'P-ISSN' in e_ssin_tr.text:
+            e_ssin_tr = None
+            idx += 1
+        elif 'E-ISSN' not in e_ssin_tr.text:
             e_ssin_tr = None
         else:
             idx += 1
+
         self_cite_ratio_tr = trs[idx]
         idx += 2
-        cite_score_table = trs[idx].find_all('tr')[1].find('table')
+        try:
+            cite_score_table = trs[idx].find_all('tr')[1].find('table')
+        except:
+            cite_score_table = None
 
         in_messy = list(list(trs[-1].children)[1].children)
-        cas_base_table = in_messy[2]
-        cas_new_table = list(list(in_messy[3].children)[1].children)[0]
+        try:
+            cas_base_table = in_messy[2]
+            cas_new_table = list(list(in_messy[3].children)[1].children)[0]
+        except:
+            cas_base_table = None
+            cas_new_table = None
 
         name_span = name_tr.find('span')
         full_name = name_span.find('a').text
@@ -101,55 +115,69 @@ class JournalsSpider(scrapy.Spider):
         e_ssin = ""
         if e_ssin_tr is not None:
             e_ssin = e_ssin_tr.find_all('td')[1].text
-        self_cite_ratio = round(float(self_cite_ratio_tr.find_all('td')[1].text.split('%')[0]) / 100, 4)
 
-        jcr_trs = cite_score_table.find_all('tr')[1:]
-        jcr_cat_code = None
-        jcr_sub = []
-        for jcr_tr in jcr_trs:
-            jcr_tds = jcr_tr.find_all('td')
-            cat_name = jcr_tds[0].text[3:]
-            cat, sub_cat = cat_name.split('小类：')
-            code = jcr_tds[1].text
-            if jcr_cat_code is None:
-                jcr_cat_code = [cat, code]
-            jcr_sub.append(sub_cat)
-        
-        cas_base_tds = list(cas_base_table.children)[1].find_all('td', recursive=False)
-        cas_base_cat = cas_base_tds[0].contents[0].strip()
-        cas_base_cat_code = cas_base_tds[0].find('span', style=lambda value: value and 'display:none' not in value).text
-        cas_base_sub = []
-        for tr in cas_base_tds[1].table.children:
-            tds = tr.find_all('td')
-            sub_en = tds[0].contents[0]
-            sub = tds[0].contents[-1]
-            sub_code = tds[1].find('span', style=lambda value: value and 'display:none' not in value).text
-            cas_base_sub.append([sub, sub_en, sub_code])
+        try:
+            self_cite_ratio = round(float(self_cite_ratio_tr.find_all('td')[1].text.split('%')[0]) / 100, 4)
+        except:
+            self_cite_ratio = -1
 
-        cas_base_top = cas_base_tds[2].text
-        cas_base_review = cas_base_tds[3].text
-        # self.logger.info([cas_base_cat, cas_base_cat_code])
-        # self.logger.info(cas_base_sub)
-        # self.logger.info(cas_base_top)
-        # self.logger.info(cas_base_review)
-        cas_new_tds = list(cas_new_table.children)[1].find_all('td', recursive=False)
-        cas_new_cat = cas_new_tds[0].contents[0].strip()
-        cas_new_cat_code = cas_new_tds[0].find('span', style=lambda value: value and 'display:none' not in value).text
-        cas_new_sub = []
-        for tr in cas_new_tds[1].table.children:
-            tds = tr.find_all('td')
-            sub_en = tds[0].contents[0]
-            sub = tds[0].contents[-1]
-            sub_code = tds[1].find('span', style=lambda value: value and 'display:none' not in value).text
-            cas_new_sub.append([sub, sub_en, sub_code])
+        if cite_score_table is not None:
+            jcr_trs = cite_score_table.find_all('tr')[1:]
+            jcr_cat_code = None
+            jcr_sub = []
+            for jcr_tr in jcr_trs:
+                jcr_tds = jcr_tr.find_all('td')
+                cat_name = jcr_tds[0].text[3:]
+                cat, sub_cat = cat_name.split('小类：')
+                code = jcr_tds[1].text
+                if jcr_cat_code is None:
+                    jcr_cat_code = [cat, code]
+                jcr_sub.append(sub_cat)
+        else:
+            jcr_sub = []
+            jcr_cat_code = [None, None]
 
-        cas_new_top = cas_new_tds[2].text
-        cas_new_review = cas_new_tds[3].text
-        # self.logger.info([cas_new_cat, cas_new_cat_code])
-        # self.logger.info(cas_new_sub)
-        # self.logger.info(cas_new_top)
-        # self.logger.info(cas_new_review)
-        item = Journal(
+        if cas_base_table is not None:
+            cas_base_tds = list(cas_base_table.children)[1].find_all('td', recursive=False)
+            cas_base_cat = cas_base_tds[0].contents[0].strip()
+            cas_base_cat_code = cas_base_tds[0].find('span', style=lambda value: value and 'display:none' not in value).text
+            cas_base_sub = []
+            for tr in cas_base_tds[1].table.children:
+                tds = tr.find_all('td')
+                sub_en = tds[0].contents[0]
+                sub = tds[0].contents[-1]
+                sub_code = tds[1].find('span', style=lambda value: value and 'display:none' not in value).text
+                cas_base_sub.append([sub, sub_en, sub_code])
+            cas_base_top = cas_base_tds[2].text
+            cas_base_review = cas_base_tds[3].text
+        else:
+            cas_base_cat = None
+            cas_base_cat_code = None
+            cas_base_sub = []
+            cas_base_top = None
+            cas_base_review = None
+
+        if cas_new_table is not None:
+            cas_new_tds = list(cas_new_table.children)[1].find_all('td', recursive=False)
+            cas_new_cat = cas_new_tds[0].contents[0].strip()
+            cas_new_cat_code = cas_new_tds[0].find('span', style=lambda value: value and 'display:none' not in value).text
+            cas_new_sub = []
+            for tr in cas_new_tds[1].table.children:
+                tds = tr.find_all('td')
+                sub_en = tds[0].contents[0]
+                sub = tds[0].contents[-1]
+                sub_code = tds[1].find('span', style=lambda value: value and 'display:none' not in value).text
+                cas_new_sub.append([sub, sub_en, sub_code])
+            cas_new_top = cas_new_tds[2].text
+            cas_new_review = cas_new_tds[3].text
+        else:
+            cas_new_cat = None
+            cas_new_cat_code = None
+            cas_new_sub = []
+            cas_new_top = None
+            cas_new_review = None
+
+        item = JournalItem(
             name=full_name,
             abrv_name=abrv_name,
             impact_factor=impact_factor,
@@ -168,6 +196,8 @@ class JournalsSpider(scrapy.Spider):
             cas_new_review=cas_new_review,
         )
         yield item
+        self.logger.debug(f'{full_name} {name}')
+        # self.logger.debug(f'Yield {item}')
 
         # self.logger.info(f"User-Agent: {response.request.headers['User-Agent']}")
         self.logger.info(f'Succeed in parse_detail for {full_name}.')

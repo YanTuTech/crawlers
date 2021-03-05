@@ -10,7 +10,7 @@ class DetailUrl(scrapy.Item):
     impact_factor = scrapy.Field()
     href = scrapy.Field()
 
-class Journal(scrapy.Item):
+class JournalItem(scrapy.Item):
     # define the fields for your item here like:
     name = scrapy.Field()
     abrv_name = scrapy.Field()
