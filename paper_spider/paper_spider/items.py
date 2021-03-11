@@ -28,3 +28,16 @@ class JournalItem(scrapy.Item):
     cas_new_sub = scrapy.Field()
     cas_new_top = scrapy.Field()
     cas_new_review = scrapy.Field()
+
+
+class PaperItem(scrapy.Item):
+    journal = scrapy.Field()
+    title = scrapy.Field()
+    abstract = scrapy.Field()
+    identifier = scrapy.Field()
+    online_date = scrapy.Field()
+
+
+class SpringerSearchItem(scrapy.Item):
+    title = scrapy.Field()
+    url = scrapy.Field()

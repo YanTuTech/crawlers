@@ -8,10 +8,14 @@ def update_skipped():
     with open('log.txt', 'r') as f:
         log = f.read()
         result = re.findall('WARNING: Failed to parse search result of (.*) http', log)
+        # existed = re.findall('\[paper_spider.pipelines\] INFO: Journal (.*) existed.', log)
+        # mismatch = re.findall('Succeed to parse detail url of (.*): \./index\.php\?j', log)
     with open('skipped.json', 'r') as f:
         skipped = json.loads(f.read())
     with open('skipped.json', 'w') as f:
         skipped += result
+        # skipped += existed
+        # skipped += mismatch
         skipped = list(set(skipped))
         f.write(json.dumps(skipped))
 

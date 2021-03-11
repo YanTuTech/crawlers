@@ -6,13 +6,39 @@
 
 # useful for handling different item types with a single interface
 from itemadapter import ItemAdapter
-from paper_spider.items import JournalItem
+from paper_spider.items import *
+from datetime import datetime
 from db import *
 import logging 
 logger = logging.getLogger(__name__)
 
 
 class PaperSpiderPipeline:
+    def process_item(self, item, spider):
+        if type(item) is not PaperItem:
+            # logger.debug(f'Not journalItem.')
+            return item
+        query = Journal.select().where(Journal.name.contains(item['journal']))
+        if not query.exists():
+            logger.warning(f'Journal {item["journal"]} does not exist')
+            return item
+        journal = query.first()
+        query = Paper.select().where(Paper.identifier==item['identifier'])
+        if query.exists():
+            logger.warning(f'Paper {item["title"]} already exists')
+            return item
+        Paper.create(
+            journal=journal,
+            title=item['title'],
+            abstract=item['abstract'],
+            identifier=item['identifier'],
+            online_date=datetime.strptime(item['online_date'], '%Y-%m-%d'),
+        )
+        logger.info(f'Paper {item["title"]} created')
+
+        return item
+
+class JournalSpiderPipeline:
     def process_item(self, item, spider):
         if type(item) is not JournalItem:
             # logger.debug(f'Not journalItem.')

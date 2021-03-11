@@ -137,4 +137,12 @@ class CASNewSubCatRel(BaseModel):
     cas_new_sub = ForeignKeyField(CASNewSubCategory)
 
 
-all_models = [Journal, JCRCategory, JCRSubCategory, JCRSubCatRel, CASBaseCategory, CASBaseSubCatRel, CASBaseSubCategory, CASNewCategory, CASNewSubCatRel, CASNewSubCategory]
+class Paper(BaseModel):
+    journal = ForeignKeyField(Journal)
+    title = CharField()
+    abstract = TextField()
+    identifier = CharField(unique=True)
+    online_date = DateField(formats='%Y-%m-%d')
+
+
+all_models = [Journal, JCRCategory, JCRSubCategory, JCRSubCatRel, CASBaseCategory, CASBaseSubCatRel, CASBaseSubCategory, CASNewCategory, CASNewSubCatRel, CASNewSubCategory, Paper]

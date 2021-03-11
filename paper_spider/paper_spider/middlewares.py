@@ -48,6 +48,10 @@ class PaperSpiderSpiderMiddleware:
             elif type(i) is JournalItem:
                 # logger.debug('Receive JournalItem')
                 yield i
+            elif type(i) is SpringerSearchItem:
+                yield scrapy.Request(i['url'], callback=spider.parse, meta={'title': i['title']})
+            elif type(i) is PaperItem:
+                yield i
             else:
                 logger.debug(f'Unknown item {i}')
 
@@ -56,7 +60,10 @@ class PaperSpiderSpiderMiddleware:
         # (from other spider middleware) raises an exception.
 
         # Should return either None or an iterable of Request or item objects.
-        logger.warning(f'Failed to parse search result of {response.request.meta["name"]} {response.request.url}...')
+        if 'name' in response.request.meta:
+            logger.warning(f'Failed to parse search result of {response.request.meta["name"]} {response.request.url}...')
+        else:
+            logger.warning(f'Failed to parse {response.request.meta["title"]} {response.request.url}...')
         return
         url = 'http://www.letpub.com.cn/index.php?page=journalapp&view=search'
         if response.request.url == url:

@@ -9,11 +9,16 @@ def get_full_journals():
 
 def get_journals():
     # with open('journals.csv', 'r') as f:
+    with open('skipped.json', 'r') as f:
+        skipped = json.loads(f.read())
+    skipped = [journal.lower() for journal in skipped]
     with open('missingJournals.csv', 'r') as f:
-        lines = f.readlines()[1:]
+        lines = f.readlines()
     
     for line in lines:
         title, impact_factor = line.split(',')
+        if title.lower() in skipped:
+            continue
         yield [title, float(impact_factor)]
 
 

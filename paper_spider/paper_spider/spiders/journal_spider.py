@@ -48,7 +48,7 @@ class JournalsSpider(scrapy.Spider):
         table = soup.find('table',{"class":"table_yjfx"})
         if table is None:
             self.logger.warning(f'[ERR:0] Failed to retrieve journal: {name}.')
-            if depth > 5:
+            if depth > 0:
                 return
             self.logger.info(f'Try again to retrieve journal: {name}...')
             url = 'http://www.letpub.com.cn/index.php?page=journalapp&view=search'
@@ -63,11 +63,16 @@ class JournalsSpider(scrapy.Spider):
         if len(trs) < 4:
             self.logger.warning(f'[ERR:1] Failed to retrieve journal: {name}.')
             return
-        tr = trs[2]
-        href = list(tr.find_all('td'))[1].find('a')['href']
-        yield DetailUrl(name=name, impact_factor=impact_factor, href=href)
-        # self.logger.info(f"User-Agent: {response.request.headers['User-Agent']}")
-        self.logger.info(f'Succeed to parse detail url of {name}: {href}.')
+        for tr in trs[2:]:
+            a = list(tr.find_all('td'))[1].find('a')
+            if a.text != name:
+                continue
+            href = a['href']
+            yield DetailUrl(name=name, impact_factor=impact_factor, href=href)
+            # self.logger.info(f"User-Agent: {response.request.headers['User-Agent']}")
+            self.logger.info(f'Succeed to parse detail url of {name}: {href}.')
+            return
+        raise Exception
 
     def parse_detail(self, response):
         name = response.request.meta['name']
@@ -83,8 +88,8 @@ class JournalsSpider(scrapy.Spider):
         name_tr = trs[idx]
         name_span = name_tr.find('span')
         full_name = name_span.find('a').text
-        # if full_name.lower() != name.lower():
-        #     return
+        if full_name.lower() != name.lower():
+            return
         idx += 1
         ssin_tr = trs[idx]
         idx += 1
@@ -112,7 +117,7 @@ class JournalsSpider(scrapy.Spider):
             cas_base_table = None
             cas_new_table = None
 
-        
+
         abrv_name = name_span.find('font').text
         ssin = ssin_tr.find_all('td')[1].text
         e_ssin = ""
@@ -140,6 +145,9 @@ class JournalsSpider(scrapy.Spider):
             jcr_sub = []
             jcr_cat_code = [None, None]
 
+        if '2020年12月最新基础版' not in cas_base_table.text:
+            cas_base_table = None
+
         if cas_base_table is not None:
             cas_base_tds = list(cas_base_table.children)[1].find_all('td', recursive=False)
             cas_base_cat = cas_base_tds[0].contents[0].strip()
@@ -159,6 +167,9 @@ class JournalsSpider(scrapy.Spider):
             cas_base_sub = []
             cas_base_top = None
             cas_base_review = None
+
+        if '2020年01月最新升级版' not in cas_new_table.text:
+            cas_new_table = None
 
         if cas_new_table is not None:
             cas_new_tds = list(cas_new_table.children)[1].find_all('td', recursive=False)

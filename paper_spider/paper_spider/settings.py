@@ -70,6 +70,7 @@ DOWNLOADER_MIDDLEWARES = {
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
    'paper_spider.pipelines.PaperSpiderPipeline': 300,
+   'paper_spider.pipelines.JournalSpiderPipeline': 301,
 }
 
 # Enable and configure the AutoThrottle extension (disabled by default)
