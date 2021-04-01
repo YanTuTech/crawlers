@@ -1,2 +1,4 @@
-CORE_API_KEY = '1nqQxhXcdY9UKb2PSysWvEzmZkOloMCA'
-SPRINGER_NATURE_KEY = 'f5dbe2907349beb0116087e6b4e98144'
+import os
+# source .env
+CORE_API_KEY = os.environ.get('CORE_API_KEY')
+SPRINGER_NATURE_KEY = os.environ.get('SPRINGER_NATURE_KEY')
